@@ -32,7 +32,7 @@ jobs:
 
           CID=$(echo $RESPONSE | jq -r '.IpfsHash')
 
-          if [ "$CID" == "null" ]; then
+          if ( "$CID" == "null" ); then
             echo "Upload failed! Response: $RESPONSE"
             exit 1
           else
