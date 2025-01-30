@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - "index.html"  # Run only when index.html is modified
+      - "index.html"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the latest code
+      # Step 1: Checkout latest code
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -39,4 +39,21 @@ jobs:
           else
             echo "Upload successful! New CID: $CID"
             echo "Access your website at: https://ipfs.io/ipfs/$CID"
+
+            # Save CID to environment for later use
+            echo "NEW_CID=$CID" >> $GITHUB_ENV
           fi
+
+      # Step 3: Update only the CID in README.md
+      - name: Update README.md with new CID
+        run: |
+          sed -i "s|https://ipfs.io/ipfs/[a-zA-Z0-9]*|https://ipfs.io/ipfs/$NEW_CID|" README.md
+
+      # Step 4: Commit and push updated README.md
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add README.md
+          git commit -m "Update README with new IPFS CID: $NEW_CID" || echo "No changes to commit"
+          git push
