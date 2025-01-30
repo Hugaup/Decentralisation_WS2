@@ -10,15 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the code
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install dependencies
+    # Step 2: Set up Node.js (required for pinata-cli)
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16' # Use a compatible Node.js version
+
+    # Step 3: Install pinata-cli globally
+    - name: Install pinata-cli
       run: npm install -g @pinata/sdk
 
+    # Step 4: Upload to Pinata
     - name: Upload to Pinata
       env:
         PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
         PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
       run: |
-        npx pinata-cli upload-dir --dir ./ --pin-name "My Website"
+        # Print the current directory structure for debugging
+        echo "Current directory structure:"
+        ls -R
+
+        # Upload the folder to Pinata
+        echo "Uploading to Pinata..."
+        CID=$(npx pinata-cli upload-dir --dir ./ --pin-name "My Website" | grep CID | awk '{print $2}')
+
+        # Check if the upload was successful
+        if [ -z "$CID" ]; then
+          echo "Upload failed. Check the logs above for errors."
+          exit 1
+        else
+          echo "Upload successful! CID: $CID"
+          echo "Access your website at: https://ipfs.io/ipfs/$CID"
+        fi
