@@ -7,6 +7,9 @@ on:
     paths:
       - "index.html"
 
+permissions:
+  contents: write  # Allow actions to push to the repository
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,8 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          # Fetch all history so that the push works correctly
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch full history to avoid issues with commits
 
       # Step 2: Upload index.html to Pinata using API
       - name: Upload index.html to Pinata
@@ -55,11 +57,10 @@ jobs:
       # Step 4: Commit and push updated README.md
       - name: Commit and push changes
         env:
-          GH_PAT: ${{ secrets.GH_PAT }} # Use your Personal Access Token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the automatically generated token
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:$GH_PAT@github.com/${{ github.repository }}.git
           git add README.md
           git commit -m "Update README with new IPFS CID: $NEW_CID" || echo "No changes to commit"
           git push origin main
