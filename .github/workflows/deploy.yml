@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     # Step 1: Checkout the code
@@ -22,7 +22,7 @@ jobs:
 
     # Step 3: Install pinata-cli globally
     - name: Install pinata-cli
-      run: npm install -g @pinata/sdk
+      run: npm install -g pinata-cli
 
     # Step 4: Upload to Pinata
     - name: Upload to Pinata
@@ -36,7 +36,7 @@ jobs:
 
         # Upload the folder to Pinata
         echo "Uploading to Pinata..."
-        CID=$(npx pinata-cli upload-dir --dir ./ --pin-name "My Website" | grep CID | awk '{print $2}')
+        CID=$(pinata-cli pinata pin ./ --name "My Website" | jq -r '.IpfsHash')
 
         # Check if the upload was successful
         if [ -z "$CID" ]; then
