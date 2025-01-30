@@ -55,10 +55,11 @@ jobs:
       # Step 4: Commit and push updated README.md
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }} # Automatically provided by GitHub Actions
+          GH_PAT: ${{ secrets.GH_PAT }} # Use your Personal Access Token
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:$GH_PAT@github.com/${{ github.repository }}.git
           git add README.md
           git commit -m "Update README with new IPFS CID: $NEW_CID" || echo "No changes to commit"
           git push origin main
