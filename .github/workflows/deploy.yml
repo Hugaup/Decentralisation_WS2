@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "index.html"  # Run workflow only if index.html is modified
+      - "index.html"  # Run only when index.html is modified
 
 jobs:
   deploy:
@@ -16,28 +16,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up Node.js (required for pinata-cli)
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'  # Compatible version
-
-      # Step 3: Install pinata-cli
-      - name: Install pinata-cli
-        run: npm install -g pinata-cli
-
-      # Step 4: Upload index.html to Pinata
+      # Step 2: Upload index.html to Pinata using API
       - name: Upload index.html to Pinata
         env:
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
           PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
         run: |
           echo "Uploading index.html to Pinata..."
-          CID=$(pinata-cli pinata pin index.html --name "Updated Index" | jq -r '.IpfsHash')
 
-          # Check if upload was successful
-          if [ -z "$CID" ]; then
-            echo "Upload failed. Check the logs above for errors."
+          RESPONSE=$(curl -s -X POST "https://api.pinata.cloud/pinning/pinFileToIPFS" \
+            -H "pinata_api_key: $PINATA_API_KEY" \
+            -H "pinata_secret_api_key: $PINATA_SECRET_API_KEY" \
+            -H "Content-Type: multipart/form-data" \
+            -F "file=@index.html" \
+            -F 'pinataMetadata={"name": "index.html"}')
+
+          CID=$(echo $RESPONSE | jq -r '.IpfsHash')
+
+          if [ "$CID" == "null" ]; then
+            echo "Upload failed! Response: $RESPONSE"
             exit 1
           else
             echo "Upload successful! New CID: $CID"
