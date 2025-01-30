@@ -1,48 +1,45 @@
-name: Deploy to IPFS
+name: Deploy index.html to Pinata
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "index.html"  # Run workflow only if index.html is modified
 
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Step 1: Checkout the latest code
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Step 2: Set up Node.js (required for pinata-cli)
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16' # Use a compatible Node.js version
+      # Step 2: Set up Node.js (required for pinata-cli)
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'  # Compatible version
 
-    # Step 3: Install pinata-cli globally
-    - name: Install pinata-cli
-      run: npm install -g pinata-cli
+      # Step 3: Install pinata-cli
+      - name: Install pinata-cli
+        run: npm install -g pinata-cli
 
-    # Step 4: Upload to Pinata
-    - name: Upload to Pinata
-      env:
-        PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
-        PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
-      run: |
-        # Print the current directory structure for debugging
-        echo "Current directory structure:"
-        ls -R
+      # Step 4: Upload index.html to Pinata
+      - name: Upload index.html to Pinata
+        env:
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_SECRET_API_KEY: ${{ secrets.PINATA_SECRET_API_KEY }}
+        run: |
+          echo "Uploading index.html to Pinata..."
+          CID=$(pinata-cli pinata pin index.html --name "Updated Index" | jq -r '.IpfsHash')
 
-        # Upload the folder to Pinata
-        echo "Uploading to Pinata..."
-        CID=$(pinata-cli pinata pin ./ --name "My Website" | jq -r '.IpfsHash')
-
-        # Check if the upload was successful
-        if [ -z "$CID" ]; then
-          echo "Upload failed. Check the logs above for errors."
-          exit 1
-        else
-          echo "Upload successful! CID: $CID"
-          echo "Access your website at: https://ipfs.io/ipfs/$CID"
-        fi
+          # Check if upload was successful
+          if [ -z "$CID" ]; then
+            echo "Upload failed. Check the logs above for errors."
+            exit 1
+          else
+            echo "Upload successful! New CID: $CID"
+            echo "Access your website at: https://ipfs.io/ipfs/$CID"
+          fi
