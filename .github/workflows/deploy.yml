@@ -15,6 +15,9 @@ jobs:
       # Step 1: Checkout latest code
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          # Fetch all history so that the push works correctly
+          fetch-depth: 0
 
       # Step 2: Upload index.html to Pinata using API
       - name: Upload index.html to Pinata
@@ -51,9 +54,11 @@ jobs:
 
       # Step 4: Commit and push updated README.md
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }} # Automatically provided by GitHub Actions
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add README.md
           git commit -m "Update README with new IPFS CID: $NEW_CID" || echo "No changes to commit"
-          git push
+          git push origin main
